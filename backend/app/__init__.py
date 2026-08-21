@@ -7,7 +7,7 @@ import os
 
 from .models import db
 
-load_dotenv(dotenv_path="../.env")
+load_dotenv()
 
 jwt = JWTManager()
 socketio = SocketIO(cors_allowed_origins="*")
