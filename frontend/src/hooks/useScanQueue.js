@@ -42,7 +42,8 @@ export const useScanQueue = (token, currentEventId) => {
           body: JSON.stringify({
             token: scan.token,
             stationId: scan.stationId,
-            idempotencyKey: scan.id
+            idempotencyKey: scan.id,
+            scannedAt: scan.scannedAt
           })
         });
         

@@ -69,7 +69,14 @@ def scan_qr(id):
             return jsonify({"error": "QR is for a different event."}), 400
             
         # 3. CHECK TIME EXPIRATION
-        now = datetime.utcnow().replace(tzinfo=pytz.UTC)
+        scanned_at_ms = data.get('scannedAt')
+        if scanned_at_ms:
+            try:
+                now = datetime.utcfromtimestamp(scanned_at_ms / 1000.0).replace(tzinfo=pytz.UTC)
+            except Exception:
+                now = datetime.utcnow().replace(tzinfo=pytz.UTC)
+        else:
+            now = datetime.utcnow().replace(tzinfo=pytz.UTC)
         expires_at = token_record.expiresAt
         if expires_at.tzinfo is None:
             expires_at = expires_at.replace(tzinfo=pytz.UTC)
