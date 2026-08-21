@@ -42,7 +42,7 @@ export default function OrganizerDashboard() {
     fetchEvents(); 
     
     // Listen for live updates across all events
-    const socket = io('http://localhost:5000');
+    const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000');
     
     socket.on('connect', () => {
       events.forEach(e => socket.emit('join_event', { eventId: e.id }));
@@ -248,7 +248,7 @@ export default function OrganizerDashboard() {
                   </div>
                   <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto border-t md:border-t-0 border-gray-100 pt-4 md:pt-0">
                     <div className="flex gap-2">
-                      <a href={`http://localhost:5000/api/events/${event.id}/export?token=${localStorage.getItem('token')}`} onClick={e => e.stopPropagation()} target="_blank" rel="noreferrer" className="text-xs text-gray-700 hover:text-gray-900 font-bold px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition shadow-sm">
+                      <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/events/${event.id}/export?token=${localStorage.getItem('token')}`} onClick={e => e.stopPropagation()} target="_blank" rel="noreferrer" className="text-xs text-gray-700 hover:text-gray-900 font-bold px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition shadow-sm">
                         Export CSV
                       </a>
                       <button onClick={(e) => handleDeleteEvent(e, event.id)} className="text-xs text-red-600 hover:text-white hover:bg-red-600 font-bold px-4 py-2.5 border border-red-200 rounded-xl transition shadow-sm">

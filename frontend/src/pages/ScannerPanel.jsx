@@ -34,7 +34,7 @@ export default function ScannerPanel({ eventId, onBack }) {
     }
 
     // Connect to Flask Socket.IO
-    const socket = io('http://localhost:5000');
+    const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000');
     
     socket.on('connect', () => {
       socket.emit('join_event', { eventId });
