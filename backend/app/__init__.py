@@ -35,6 +35,9 @@ def create_app():
         "DATABASE_URL",
         "postgresql://checkedin_user:checkedin_password@localhost:5433/checkedin",
     )
+    if db_url and db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+        
     if "?schema=" in db_url:
         db_url = db_url.split("?schema=")[0]
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url
