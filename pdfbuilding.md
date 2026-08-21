@@ -15,7 +15,7 @@ This document provides the exact structural blueprint for your final PDF submiss
 
 ### 3. Tech Stack & Architectural Justification
 - **Frontend (React, Vite, Tailwind CSS, IndexedDB):** Chosen to build a highly responsive, stateful Single Page Application. `IndexedDB` was specifically selected to provide persistent local storage for the offline-first scanning queue, allowing volunteers to continue scanning during network drops.
-- **Backend (Python, Flask, Flask-SocketIO):** Python and Flask provide a lightweight, high-performance API layer. `Flask-SocketIO` was chosen to maintain persistent WebSocket connections with the Organizer Dashboard, allowing the UI to react instantly to check-ins without polling.
+- **Backend (Python, Flask, Flask-SocketIO):** Python and Flask provide a lightweight, high-performance API layer. `Flask-SocketIO` was chosen to maintain persistent WebSocket connections with the Organizer Dashboard and Live Tickets. By enforcing explicit `join_room` commands inside the `connect` lifecycle event, we guarantee that devices automatically resubscribe to their live feeds even after momentary WiFi drops, ensuring zero-latency "Verified" animations.
 - **Database (PostgreSQL & SQLAlchemy):** **This is the most critical architectural choice.** PostgreSQL was selected specifically for its ACID compliance and advanced concurrency controls (like `SELECT ... FOR UPDATE`), which are mathematically required to prevent race conditions during high-volume registration surges.
 
 *(📸 Screenshot 1: The Attendee Dashboard showing "My Tickets" and "Upcoming Events")*
@@ -60,7 +60,11 @@ We explicitly chose *Rotating Tokens* over *Static One-Time Tokens*. While a sta
 ### Requirement 3: Offline-First Scanning & Sync Conflicts
 
 **The Logic & Implementation:**
-Venue WiFi is inherently unstable. Our scanner UI utilizes the `navigator.onLine` API. When offline, the React application wraps the scan payload (the scanned JWT and the Station ID) alongside a locally generated `UUIDv4` string called the **Idempotency Key**, caching it securely in the browser's `IndexedDB`.
+Venue WiFi is inherently unstable. Our scanner UI utilizes the `navigator.onLine` API. When offline, the React application wraps the scan payload (the scanned JWT and the Station ID) alongside a locally generated `UUIDv4` string called the **Idempotency Key** and the exact **`scannedAt` timestamp**, caching it securely in the browser's `IndexedDB`.
+
+**The Edge Case Resolution (Delayed Expiration Bypass):**
+*Scenario: An Organizer scans a ticket while offline. The internet doesn't return for 5 minutes. The 60-second JWT token has mathematically expired.*
+- **The Fix:** Because the backend explicitly trusts the authorized Organizer's device, the delayed sync payload includes the original `scannedAt` timestamp. The backend temporarily shifts the evaluation timezone to the exact millisecond of the physical scan, perfectly validating the token and bypassing the 60-second expiration lock.
 
 **The Edge Case Resolution (Station A offline, Station B online):**
 *Scenario: Bob is scanned offline at Station A, then walks to Station B and is successfully scanned online.*
