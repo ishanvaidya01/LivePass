@@ -1,0 +1,6 @@
+venv/
+__pycache__/
+*.pyc
+.env
+test_results.log
+test_concurrency.py
