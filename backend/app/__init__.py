@@ -58,4 +58,7 @@ def create_app():
     app.register_blueprint(registrations_bp, url_prefix="/api/registrations")
     app.register_blueprint(scan_bp, url_prefix="/api/events")
 
+    with app.app_context():
+        db.create_all()
+
     return app
