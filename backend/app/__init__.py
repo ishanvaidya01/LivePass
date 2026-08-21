@@ -12,6 +12,20 @@ load_dotenv(dotenv_path="../.env")
 jwt = JWTManager()
 socketio = SocketIO(cors_allowed_origins="*")
 
+@socketio.on('join_event')
+def handle_join_event(data):
+    from flask_socketio import join_room
+    event_id = data.get('eventId')
+    if event_id:
+        join_room(f"event:{event_id}:dashboard")
+
+@socketio.on('join_ticket')
+def handle_join_ticket(data):
+    from flask_socketio import join_room
+    reg_id = data.get('registrationId')
+    if reg_id:
+        join_room(f"ticket:{reg_id}")
+
 
 def create_app():
     app = Flask(__name__)

@@ -43,7 +43,10 @@ export default function OrganizerDashboard() {
     
     // Listen for live updates across all events
     const socket = io('http://localhost:5000');
-    events.forEach(e => socket.emit('join_event', { eventId: e.id }));
+    
+    socket.on('connect', () => {
+      events.forEach(e => socket.emit('join_event', { eventId: e.id }));
+    });
     
     socket.on('checkin_success', () => {
       fetchEvents();

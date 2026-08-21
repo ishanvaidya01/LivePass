@@ -13,6 +13,7 @@ export default function TicketView() {
   const [verified, setVerified] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isOffline, setIsOffline] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(60);
   const loadTicketRef = useRef(null);
 
   useEffect(() => {
@@ -44,6 +45,7 @@ export default function TicketView() {
         setQrUrl(url);
         setTicketData(data);
         setIsOffline(false);
+        setTimeLeft(60); // Reset timer upon successful load
       } catch (err) {
         if (!isMounted) return;
         
@@ -62,10 +64,17 @@ export default function TicketView() {
     
     loadTicketRef.current = loadTicket;
     loadTicket();
-    const intervalId = setInterval(loadTicket, 60000); // refresh every 60s
+    const intervalId = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          if (loadTicketRef.current) loadTicketRef.current();
+          return 60;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
     const socket = io('http://localhost:5000');
-    socket.emit('join_ticket', { registrationId: id });
     
     socket.on('ticket_verified', (data) => {
       setVerified(true);
@@ -90,6 +99,8 @@ export default function TicketView() {
     let isInitialConnect = true;
     socket.on('connect', () => {
       setIsOffline(false);
+      socket.emit('join_ticket', { registrationId: id });
+      
       // Only reload on reconnect, not on the initial mount, to prevent flickering
       if (!isInitialConnect && loadTicketRef.current) {
         loadTicketRef.current();
@@ -196,6 +207,12 @@ export default function TicketView() {
               ) : (
                 <div className="w-full h-full bg-gray-100 rounded-xl animate-pulse"></div>
               )}
+            </div>
+            
+            {/* Visual Timer Pill */}
+            <div className="flex items-center justify-center gap-2 mb-6 text-brand-600 font-bold bg-brand-50 px-4 py-1.5 rounded-full text-xs border border-brand-100 shadow-sm">
+               <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+               Refreshes in {timeLeft}s
             </div>
             
             <div className="text-center w-full">

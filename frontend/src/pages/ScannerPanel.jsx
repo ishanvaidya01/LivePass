@@ -35,7 +35,11 @@ export default function ScannerPanel({ eventId, onBack }) {
 
     // Connect to Flask Socket.IO
     const socket = io('http://localhost:5000');
-    socket.emit('join_event', { eventId });
+    
+    socket.on('connect', () => {
+      socket.emit('join_event', { eventId });
+    });
+    
     socket.on('checkin_success', (data) => {
       setLiveFeed(prev => [data, ...prev].slice(0, 10));
       if (data.registrationId) {
