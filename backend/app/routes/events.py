@@ -210,11 +210,17 @@ def get_insights(id):
         
         peak_time = "N/A"
         if checkins:
+            import pytz
+            ist = pytz.timezone('Asia/Kolkata')
             buckets = {}
             for (dt,) in checkins:
                 if not dt: continue
-                minutes = (dt.minute // 10) * 10
-                key = f"{dt.hour:02d}:{minutes:02d}"
+                if dt.tzinfo is None:
+                    dt = pytz.UTC.localize(dt)
+                local_dt = dt.astimezone(ist)
+                
+                minutes = (local_dt.minute // 10) * 10
+                key = f"{local_dt.hour:02d}:{minutes:02d}"
                 buckets[key] = buckets.get(key, 0) + 1
             if buckets:
                 max_key = max(buckets, key=buckets.get)
