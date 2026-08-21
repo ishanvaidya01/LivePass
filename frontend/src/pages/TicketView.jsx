@@ -16,35 +16,42 @@ export default function TicketView() {
   const loadTicketRef = useRef(null);
 
   useEffect(() => {
+    let isMounted = true;
     async function loadTicket() {
       try {
-        const data = await apiCall(`/registrations/${id}/token`);
+        const data = await apiCall(`/registrations/${id}/token?t=${Date.now()}`);
+        if (!isMounted) return;
+
         if (data.alreadyCheckedIn) {
           setTicketData(data);
           setVerified(true);
           return;
         }
-        setTicketData(data);
-        setIsOffline(false);
         
-        // Generate high-res QR code
+        // Generate high-res QR code first
         const url = await QRCode.toDataURL(data.token, {
           width: 400,
           margin: 1,
           color: {
-            dark: '#0f172a', // Slate 900
+            dark: '#0f172a',
             light: '#ffffff'
           }
         });
+        
+        if (!isMounted) return;
+        
+        // Update all state simultaneously to prevent staggered rendering
         setQrUrl(url);
+        setTicketData(data);
+        setIsOffline(false);
       } catch (err) {
+        if (!isMounted) return;
+        
         console.error("Failed to refresh ticket:", err);
         const errMsg = err.message || '';
-        // If it's a network error or server is down, DO NOT set errorMsg!
-        // We want to keep the old QR code on the screen so it can still be scanned offline.
+        
         if (!errMsg.includes('Failed to fetch') && !errMsg.includes('NetworkError') && navigator.onLine) {
-          // Only show error screen for real errors like "Registration not found" or "Cancelled"
-          if (!ticketData) { // Only if we don't already have a valid ticket displayed
+          if (!ticketData) { 
             setErrorMsg(errMsg || 'Ticket unavailable');
           }
         } else {
@@ -66,11 +73,8 @@ export default function TicketView() {
 
     socket.on('ticket_error', (data) => {
       if (data.error === 'outdated') {
-        setErrorMsg('Your QR code expired during scan. Refreshing...');
-        setTimeout(() => {
-          setErrorMsg('');
-          loadTicketRef.current();
-        }, 2000);
+        // Instantly and silently fetch a new QR code without disrupting the UI
+        if (loadTicketRef.current) loadTicketRef.current();
       } else if (data.error === 'invalid_event') {
         setErrorMsg('You scanned at the wrong event!');
         setTimeout(() => {
@@ -83,14 +87,18 @@ export default function TicketView() {
       setIsOffline(true);
     });
 
+    let isInitialConnect = true;
     socket.on('connect', () => {
       setIsOffline(false);
-      if (loadTicketRef.current) {
+      // Only reload on reconnect, not on the initial mount, to prevent flickering
+      if (!isInitialConnect && loadTicketRef.current) {
         loadTicketRef.current();
       }
+      isInitialConnect = false;
     });
 
     return () => {
+      isMounted = false;
       clearInterval(intervalId);
       socket.disconnect();
     };

@@ -215,10 +215,8 @@ def generate_token(id):
         import jwt
         from flask import current_app
 
-        raw_token = os.urandom(
-            8
-        ).hex()  # 16 chars is enough entropy for a 120s token, reduces QR density
-        expires_at = datetime.utcnow() + timedelta(seconds=120)
+        raw_token = os.urandom(8).hex()  
+        expires_at = datetime.utcnow() + timedelta(seconds=60)
 
         # Minimal payload for smallest possible QR code
         payload = {"j": raw_token, "r": id, "n": reg.user.name}
