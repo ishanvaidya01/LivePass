@@ -42,7 +42,7 @@ def create_app():
         db_url = db_url.split("?schema=")[0]
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET", "fallback_secret_key")
+    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", os.getenv("JWT_SECRET", "fallback_secret_key"))
     app.config["JWT_TOKEN_LOCATION"] = ["headers", "query_string"]
     app.config["JWT_QUERY_STRING_NAME"] = "token"
 

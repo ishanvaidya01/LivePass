@@ -3,7 +3,7 @@ import requests
 import json
 
 def generate_insights(stats: dict) -> str:
-    api_key = os.getenv('GEMINI_API_KEY')
+    api_key = os.getenv('GEMINI_API_KEY', os.getenv('QWEN_API_KEY'))
     
     # Fallback Rule-Based Engine
     def rule_based_fallback():
