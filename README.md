@@ -9,7 +9,7 @@ LivePass is a production-grade, real-time event check-in platform engineered to 
 - **Rotating QR Security**: Attendees are issued dynamic QR codes on their live ticket that rotate constantly. Screenshots are useless, virtually eliminating ticket sharing and fraud.
 - **Real-Time Live Feed**: The Organizer dashboard is powered by WebSockets (Socket.IO). When a volunteer scans a ticket at Gate A, the Organizer sees the check-in flash on their screen instantly, without refreshing.
 
-## 🛠️Tech Stack
+## Tech Stack
 
 - **Frontend**: React, Vite, Tailwind CSS, Html5Qrcode, IndexedDB
 - **Backend**: Python, Flask, Flask-SocketIO, SQLAlchemy
