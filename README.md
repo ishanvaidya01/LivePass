@@ -18,45 +18,63 @@ LivePass is a production-grade, real-time event check-in platform engineered to 
 ## Setup & Running Locally
 
 ### 1. Prerequisites
-- Python 3.10+
-- Node.js (v18+)
-- PostgreSQL Database
+- **Python 3.10+**
+- **Node.js (v18+)**
+- **PostgreSQL**: Must be installed and running on your system.
 
-### 2. Database Configuration
-Ensure PostgreSQL is running. Create a `.env` file in the `backend` directory:
+### 2. Database & Backend Configuration
+Create a `.env` file in the `backend` directory with the following variables:
 ```env
-DATABASE_URL="postgresql://username:password@localhost:5432/checkedin"
+# Connection string for your local PostgreSQL database
+DATABASE_URL="postgresql://postgres:password@localhost:5432/livepass_db"
+
+# Secret key for JWT Authentication (can be any random string)
 JWT_SECRET="your_secure_jwt_secret"
+
+# Required for AI Insights on the Organizer Dashboard
+GEMINI_API_KEY="your_google_gemini_api_key"
 ```
 
-### 3. Start the Backend
-Open a terminal in the `/backend` directory:
+### 3. Start the Backend Server
+Open a terminal and navigate to the `/backend` directory:
 ```bash
 # Create a virtual environment
 python -m venv venv
-venv\Scripts\activate  # Windows
+
+# Activate the virtual environment
+venv\Scripts\activate      # Windows
 # source venv/bin/activate # Mac/Linux
 
-# Install dependencies
+# Install all Python dependencies
 pip install -r requirements.txt
 
 # Start the Flask API & WebSocket Server
 python -m flask run --port 5000
 ```
+*(Note: The database tables will be created automatically the first time the server starts).*
 
-### 4. Start the Frontend
-Open a terminal in the `/frontend` directory:
+### 4. Frontend Configuration
+Create a `.env` file in the `frontend` directory:
+```env
+VITE_API_URL="http://127.0.0.1:5000/api"
+VITE_SOCKET_URL="http://127.0.0.1:5000"
+```
+
+### 5. Start the Frontend Application
+Open a new terminal and navigate to the `/frontend` directory:
 ```bash
-# Install dependencies
+# Install Node dependencies
 npm install
 
 # Start the Vite development server
 npm run dev
 ```
 
-### 5. Access the Platform
-- **App URL**: `http://localhost:5173` (or the port Vite provides)
-- **Sign Up**: Create an account. Choose "ORGANIZER" to create events and access the scanning dashboard, or "ATTENDEE" to register for events and view your live QR ticket.
+### 6. Access the Platform
+- **App URL**: Open your browser and go to `http://localhost:5173`
+- **Sign Up**: Create a new account.
+  - Choose **ORGANIZER** if you want to create events, view AI insights, and access the scanning dashboard.
+  - Choose **ATTENDEE** if you want to register for events and view your live QR ticket.
 
 ## Load Testing
 You can mathematically verify the concurrency safety of the registration endpoint by running the included Python load testing script:
