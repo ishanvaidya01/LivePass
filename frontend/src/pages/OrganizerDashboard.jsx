@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiCall } from '../services/api';
 import ScannerPanel from './ScannerPanel';
@@ -14,6 +14,7 @@ export default function OrganizerDashboard() {
   const [error, setError] = useState('');
   const [insights, setInsights] = useState({});
   const navigate = useNavigate();
+  const socketRef = useRef(null);
 
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
@@ -33,6 +34,10 @@ export default function OrganizerDashboard() {
     try {
       const data = await apiCall('/events');
       setEvents(data);
+      // After fetching events, join all their socket rooms
+      if (socketRef.current?.connected) {
+        data.forEach(e => socketRef.current.emit('join_event', { eventId: e.id }));
+      }
     } catch (err) {
       console.error(err);
     }
@@ -41,19 +46,28 @@ export default function OrganizerDashboard() {
   useEffect(() => { 
     fetchEvents(); 
     
-    // Listen for live updates across all events
+    // Persistent socket connection for live updates
     const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000');
+    socketRef.current = socket;
     
     socket.on('connect', () => {
-      events.forEach(e => socket.emit('join_event', { eventId: e.id }));
+      // Re-join rooms on reconnect using current events
+      setEvents(prev => {
+        prev.forEach(e => socket.emit('join_event', { eventId: e.id }));
+        return prev;
+      });
     });
     
-    socket.on('checkin_success', () => {
-      fetchEvents();
-    });
+    // Refresh event list on check-in, new registration, or new event
+    socket.on('checkin_success', () => fetchEvents());
+    socket.on('new_registration', () => fetchEvents());
+    socket.on('event_created', () => fetchEvents());
     
-    return () => socket.disconnect();
-  }, [fetchEvents, events.length]);
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [fetchEvents]);
 
   const handleCreateEvent = async (e) => {
     e.preventDefault();

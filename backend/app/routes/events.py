@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, Response
 from sqlalchemy import func
 from datetime import datetime
 import re
+import pytz
 from ..models import db, Event, EventStatus, Registration, RegistrationStatus, CheckInToken, CheckIn, AuditLog, User
 from ..utils.auth import require_auth, require_role, get_current_user
 from ..services.ai_insights import generate_insights
@@ -95,6 +96,10 @@ def create_event():
         db.session.add(audit_log)
         db.session.commit()
         
+        # Notify all connected organizer dashboards of the new event
+        from .. import socketio
+        socketio.emit('event_created', {"id": event.id, "name": event.name})
+        
         return jsonify({
             "id": event.id, "name": event.name, "date": event.date.isoformat(),
             "venue": event.venue, "capacity": event.capacity, "status": event.status.value
@@ -130,10 +135,12 @@ def get_recent_checkins(id):
         ).order_by(CheckIn.checkedInAt.desc()).limit(10).all()
         
         feed = []
+        ist = pytz.timezone('Asia/Kolkata')
+        import pytz as _pytz
         for c in checkins:
-            dt_iso = c.checkedInAt.isoformat()
-            if not dt_iso.endswith('Z') and '+' not in dt_iso:
-                dt_iso += 'Z'
+            dt_utc = c.checkedInAt.replace(tzinfo=_pytz.UTC) if c.checkedInAt.tzinfo is None else c.checkedInAt
+            dt_ist = dt_utc.astimezone(ist)
+            dt_iso = dt_ist.isoformat()
                 
             feed.append({
                 "userName": c.registration.user.name,
@@ -179,7 +186,12 @@ def register_event(id):
 
         db.session.commit()
         
-        # Email would be sent here asynchronously
+        # Notify organizer dashboard of new registration in real-time
+        from .. import socketio
+        socketio.emit('new_registration', {
+            "eventId": id,
+            "registeredCount": event.registeredCount
+        }, to=f"event:{id}:dashboard")
         
         return jsonify({
             "id": reg.id,

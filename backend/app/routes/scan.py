@@ -117,11 +117,14 @@ def scan_qr(id):
         
         # Fire socket event
         from .. import socketio
+        ist = pytz.timezone('Asia/Kolkata')
+        checkin_utc = checkin.checkedInAt.replace(tzinfo=pytz.UTC) if checkin.checkedInAt.tzinfo is None else checkin.checkedInAt
+        checkin_ist = checkin_utc.astimezone(ist)
         checkin_payload = {
             "registrationId": registration.id,
             "userId": registration.userId,
             "userName": registration.user.name,
-            "checkedInAt": checkin.checkedInAt.isoformat() + "Z",
+            "checkedInAt": checkin_ist.isoformat(),
             "stationId": station_id
         }
         

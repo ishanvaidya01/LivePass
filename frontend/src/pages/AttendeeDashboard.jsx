@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiCall } from '../services/api';
+import { io } from 'socket.io-client';
 
 export default function AttendeeDashboard() {
   const [myRegistrations, setMyRegistrations] = useState([]);
@@ -33,6 +34,15 @@ export default function AttendeeDashboard() {
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Real-time: refresh when events are created or check-in happens
+  useEffect(() => {
+    const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000');
+    socket.on('event_created', () => fetchData());
+    socket.on('checkin_success', () => fetchData());
+    socket.on('new_registration', () => fetchData());
+    return () => socket.disconnect();
+  }, [fetchData]);
 
   const handleRegister = async (eventId) => {
     setError('');
