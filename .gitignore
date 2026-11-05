@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+venv/
+.venv/
+env/
+
+# Environment files and secrets
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Build output
+dist/
+build/
+.next/
+*.tsbuildinfo
+
+# Databases, dumps, and logs
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.log
+test_results.log
+
+# Local documents and artifacts
+Project_guide.md
+Project_guide.txt
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+config.bat
